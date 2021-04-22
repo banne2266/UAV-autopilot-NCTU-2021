@@ -4,6 +4,7 @@ import time
 import numpy as np
 import math
 from enum import Enum
+from util import *
 
 class State(Enum):
     INIT = 1
@@ -24,6 +25,7 @@ def main():
     distortion = distCoeffs
 
     state = State.INIT
+    land_find = 0
     
     while(True):
         frame = drone.read()
@@ -33,10 +35,6 @@ def main():
             frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
 
             rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
-            #frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 0.1)
-
-            #text = 'x = ' + str(tvec[0][0][0]) + 'y = ' + str(tvec[0][0][1]) + 'z = ' + str(tvec[0][0][2])
-
             cv2.putText(frame, str(tvec), (10, 40), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
             cv2.putText(frame, str(rvec), (10, 400), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
 
@@ -47,196 +45,67 @@ def main():
                 drone.keyboard(key)
                 cv2.destroyAllWindows()
             else:
-                id = markerIds[0][0]
-
+                idx = get_lowest_id(markerIds)
+                id = markerIds[idx][0] 
+                print(tvec[idx][0][2])
+                #print(id)
                 if id == 0:      
-                    up_down = tvec[0][0][1] - 15
-                    distance = tvec[0][0][2] - 50
-                    left_right = tvec[0][0][0]
-
-                    dst, jaco = cv2.Rodrigues(rvec[0][0])
-                    z_ = np.array([dst[0][2], dst[1][2], dst[2][2]])
-                    v = np.array([z_[0], 0, z_[2]])
-                    degree = math.atan2(z_[2], z_[0])
-                    degree = -degree * 180  / math.pi
-
-                    if left_right > 15:
-                        drone.move_right(20/100)
-                    elif left_right < -15:
-                        drone.move_left(20/100)
-
-                    elif degree > 100:
-                        drone.rotate_cw(10)
-                    elif degree < 80:
-                        drone.rotate_ccw(10)
-                    
-                    elif up_down > 10:
-                        drone.move_down(20/100)
-                    elif up_down < -10:
-                        drone.move_up(20/100)
-                    
-                    elif distance > 0:
-                        print(drone.move_forward(max(distance/2, 20)/100))
-                    elif distance < 0:
-                        drone.move_backward(distance/100)
-
-                    
+                    degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 90, idx)
                     cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
-
+                    
+                elif id == 2: #fly higher
+                    drone.move_up(50/100)
 
                 elif id == 3: #auto pilot
-                    if(state == State.INIT):#find id4
-                        up_down = tvec[0][0][1] + 5
-                        distance = tvec[0][0][2] - 70
-                        left_right = tvec[0][0][0]
-
-                        dst, jaco = cv2.Rodrigues(rvec[0][0])
-                        z_ = np.array([dst[0][2], dst[1][2], dst[2][2]])
-                        v = np.array([z_[0], 0, z_[2]])
-                        degree = math.atan2(z_[2], z_[0])
-                        degree = -degree * 180  / math.pi
-
-                        if left_right > 15:
-                            drone.move_right(20/100)
-                        elif left_right < -15:
-                            drone.move_left(20/100)
-
-                        elif degree > 100:
-                            drone.rotate_cw(10)
-                        elif degree < 80:
-                            drone.rotate_ccw(10)
-                        
-                        elif up_down > 10:
-                            drone.move_down(20/100)
-                        elif up_down < -10:
-                            drone.move_up(20/100)
-                        
-                        elif distance > 0:
-                            print(drone.move_forward(max(distance/2, 20)/100))
-                        elif distance < 0:
-                            drone.move_backward(25/100)
-
-                        
+                    if(state == State.INIT):#find id3
+                        degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec,70, idx)
                         cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
-
-                      
 
                         if tvec[0][0][2] < 70 and abs(degree - 90) < 10 and abs(left_right) < 20:
                             state = State.FLY_ACROSS
                             
                     if(state == State.FLY_ACROSS):
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_down(80/100)
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_forward(150/100)
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_up(80/100)
                         state = State.INIT
-                        
-                        
-
-
 
                 elif id == 4: #auto pilot
                     if(state == State.INIT):#find id4
-                        up_down = tvec[0][0][1] - 15
-                        distance = tvec[0][0][2] - 80
-                        left_right = tvec[0][0][0]
-
-                        dst, jaco = cv2.Rodrigues(rvec[0][0])
-                        z_ = np.array([dst[0][2], dst[1][2], dst[2][2]])
-                        v = np.array([z_[0], 0, z_[2]])
-                        degree = math.atan2(z_[2], z_[0])
-                        degree = -degree * 180  / math.pi
-
-                        if left_right > 15:
-                            drone.move_right(20/100)
-                        elif left_right < -15:
-                            drone.move_left(20/100)
-
-                        elif degree > 105:
-                            drone.rotate_cw(10)
-                        elif degree < 75:
-                            drone.rotate_ccw(10)
-                        
-                        elif up_down > 10:
-                            drone.move_down(20/100)
-                        elif up_down < -10:
-                            drone.move_up(20/100)
-                        
-                        elif distance > 0:
-                            print(drone.move_forward(max(distance/2, 20) / 100))
-                        elif distance < 0:
-                            drone.move_backward(25/100)
-
-                        
+                        degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 70, idx)
                         cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
-
-                      
 
                         if tvec[0][0][2] < 80 and abs(degree - 90) < 10 and abs(left_right) < 20:
                             state = State.FLY_ACROSS
                             
                     if(state == State.FLY_ACROSS):
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_up(80/100)
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_forward(150/100)
-                        time.sleep(4)
+                        time.sleep(5)
                         drone.move_down(80/100)
                         state = State.INIT
 
                 elif id == 5: #auto pilot
-                    if(state == State.INIT):#find id4
-                        up_down = tvec[0][0][1] - 15
-                        distance = tvec[0][0][2] - 70
-                        left_right = tvec[0][0][0]
-
-                        dst, jaco = cv2.Rodrigues(rvec[0][0])
-                        z_ = np.array([dst[0][2], dst[1][2], dst[2][2]])
-                        v = np.array([z_[0], 0, z_[2]])
-                        degree = math.atan2(z_[2], z_[0])
-                        degree = -degree * 180  / math.pi
-
-                        if left_right > 10:
-                            drone.move_right(20/100)
-                        elif left_right < -10:
-                            drone.move_left(20/100)
-
-                        elif degree > 105:
-                            drone.rotate_cw(10)
-                        elif degree < 75:
-                            drone.rotate_ccw(10)
-                        
-                        elif up_down > 10:
-                            drone.move_down(20/100)
-                        elif up_down < -10:
-                            drone.move_up(20/100)
-                        
-                        elif distance > 10:
-                            print(drone.move_forward(max(distance/2, 20) / 100))
-                        elif distance < -10:
-                            drone.move_backward(20/100)
-
-                        
+                    land_find = 1
+                    if(state == State.INIT):#find id5
+                        degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 65, idx)
                         cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
 
-                      
-
-                        if abs(tvec[0][0][2]-60) < 20 and abs(degree - 90) < 10 and abs(left_right) < 20:
+                        if abs(tvec[0][0][2]-60) < 20 and abs(degree - 90) < 10 and abs(left_right) < 15:
                             state = State.FLY_ACROSS
                             
                     if(state == State.FLY_ACROSS):
-                        time.sleep(4)
                         drone.land()
+                        land_find = 0
 
-                        
 
-
-                
 
         cv2.imshow('frame', frame)
-
         key = cv2.waitKey(100)
         if key != -1:
             drone.keyboard(key)
