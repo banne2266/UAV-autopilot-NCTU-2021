@@ -25,7 +25,6 @@ def main():
     distortion = distCoeffs
 
     state = State.INIT
-    land_find = 0
     
     while(True):
         frame = drone.read()
@@ -47,11 +46,9 @@ def main():
             else:
                 idx = get_lowest_id(markerIds)
                 id = markerIds[idx][0] 
-                print(tvec[idx][0][2])
                 #print(id)
                 if id == 0:      
                     degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 90, idx)
-                    cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
                     
                 elif id == 2: #fly higher
                     drone.move_up(50/100)
@@ -59,7 +56,6 @@ def main():
                 elif id == 3: #auto pilot
                     if(state == State.INIT):#find id3
                         degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec,70, idx)
-                        cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
 
                         if tvec[0][0][2] < 70 and abs(degree - 90) < 10 and abs(left_right) < 20:
                             state = State.FLY_ACROSS
@@ -76,7 +72,6 @@ def main():
                 elif id == 4: #auto pilot
                     if(state == State.INIT):#find id4
                         degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 70, idx)
-                        cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
 
                         if tvec[0][0][2] < 80 and abs(degree - 90) < 10 and abs(left_right) < 20:
                             state = State.FLY_ACROSS
@@ -91,17 +86,14 @@ def main():
                         state = State.INIT
 
                 elif id == 5: #auto pilot
-                    land_find = 1
                     if(state == State.INIT):#find id5
                         degree, distance, left_right, up_down = get_coloser(drone, tvec, rvec, 65, idx)
-                        cv2.putText(frame, str(degree), (10, 200), cv2.FONT_HERSHEY_PLAIN,1, (0, 255, 255), 1, cv2.LINE_AA)
 
                         if abs(tvec[0][0][2]-60) < 20 and abs(degree - 90) < 10 and abs(left_right) < 15:
                             state = State.FLY_ACROSS
                             
                     if(state == State.FLY_ACROSS):
                         drone.land()
-                        land_find = 0
 
 
 
