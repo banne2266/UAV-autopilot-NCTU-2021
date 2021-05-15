@@ -48,3 +48,8 @@ def get_lowest_id(markerIds):
             idx = i
             min_val = markerIds[i][0]
     return idx
+
+
+
+def pixelsum(frame):
+    return np.sum(frame, axis = 0), np.sum(frame, axis = 1)
