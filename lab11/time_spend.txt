@@ -1,0 +1,4 @@
+OpenCV's version: 3.4.2
+SURF take 0.24699831008911133 sec to compute
+SIFT take 0.1139976978302002 sec to compute
+ORB take 0.016000747680664062 sec to compute
