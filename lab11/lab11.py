@@ -15,7 +15,7 @@ def main():
     detector = cv2.xfeatures2d.SURF_create()
     keypoints1, descriptors1 = detector.detectAndCompute(img1, None)
     keypoints2, descriptors2 = detector.detectAndCompute(img2, None)
-    matcher = cv2.BFMatcher(cv2.NORM_L1,crossCheck=False)
+    matcher = cv2.BFMatcher(cv2.NORM_L2,crossCheck=True)
     matches = matcher.match(descriptors1, descriptors2)
 
     matches = sorted(matches, key = lambda x : x.distance)
@@ -34,7 +34,7 @@ def main():
     detector = cv2.xfeatures2d.SIFT_create()
     keypoints1, descriptors1 = detector.detectAndCompute(img1, None)
     keypoints2, descriptors2 = detector.detectAndCompute(img2, None)
-    matcher = cv2.BFMatcher(cv2.NORM_L1,crossCheck=False)
+    matcher = cv2.BFMatcher(cv2.NORM_L2,crossCheck=True)
     matches = matcher.match(descriptors1, descriptors2)
 
     matches = sorted(matches, key = lambda x : x.distance)
@@ -54,7 +54,7 @@ def main():
     detector = cv2.ORB_create()
     keypoints1, descriptors1 = detector.detectAndCompute(img1, None)
     keypoints2, descriptors2 = detector.detectAndCompute(img2, None)
-    matcher = cv2.BFMatcher(cv2.NORM_L1,crossCheck=False)
+    matcher = cv2.BFMatcher(cv2.NORM_L2,crossCheck=True)
     matches = matcher.match(descriptors1, descriptors2)
 
     matches = sorted(matches, key = lambda x : x.distance)
